@@ -4,6 +4,7 @@
 
 This repository contains the Terraform/AWS infrastructure setup for deploying a covert Command and Control (C2) infrastructure for red team ops. 
 The agents on a workstation connect through to your domain, then have the traffic filtered thoroughly first by the Apache Redirector(EC2) and then once meets the specifications it will pass it onto the C2 server over TLS. This is just a Tier 1 setup, a Tier 2 setup would normally have an additional redirector in front of the Redirector EC2 like a Lambda Function.
+![Checkout the write up here!](https://cyberchronicles.org/posts/5/)
 
 ## Architecture
 ![architecture diagram](/architecture.png)
