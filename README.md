@@ -46,7 +46,7 @@ Before running Terraform, if you wish to change the values of the custom access 
 ### 1. The Setup
 
 ```bash
-git clone https://github.com/h1dz/C2deploy && cd C2deploy
+git clone https://github.com/Cyber-Chronicles/CovertC2 && cd CovertC2
 
 #Now you need to configure your AWS keys that you generated earlier on your Linux host, (ensure awscli is installed):
 aws configure
