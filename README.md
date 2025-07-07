@@ -125,4 +125,3 @@ python3 linux_agent.py
 - If you already have an AWS account ready and a domain, the time to setup the infrastructure with this repo is 10 minutes.
 - Average cost per 30 days if not shutdown: $33
 - Average cost per day: $1~$2
-```
