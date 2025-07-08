@@ -13,11 +13,11 @@ Linux/Windows Agent → Domain → Public EC2 (Apache ProxyPass) → Private EC2
 ```
 
 The infrastructure provides:
-- **Covert Communications**: TLS-encrypted traffic through legitimate-looking endpoints
-- **Network Isolation**: C2 server isolated in private subnet with no public IP
-- **Stealth Operations**: Apache ProxyPass redirector filters out bots and malicious user-agents
-- **GET Requests**: Are done via this endpoint only `/api/v2/status`
-- **POST Requests**: Are done via this endpoint only `/api/v2/users/update`
+- **Covert Communications**: TLS-encrypted traffic through legitimate-looking endpoints.
+- **Network Isolation**: C2 server isolated in private subnet with no public IP.
+- **Stealth Operations**: Apache redirector filters out bots and malicious user-agents acting as a reverse proxy as well.
+- **GET Requests**: Are done via this endpoint only `/api/v2/status`.
+- **POST Requests**: Are done via this endpoint only `/api/v2/users/update`.
 - **Headers**: A valid user-agent and custom header `Access-X-Control: 000000011110000000` are required to reach the C2.
 - **AWS US-WEST-2**: This setup uses us-west-2 by default, for local engagement ensure to edit the variables.tf to a closer region to you.
   
