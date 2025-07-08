@@ -123,5 +123,5 @@ python3 linux_agent.py
 - Was a pleasure to build this setup, as of 05/07/25 the windows_agent.ps1 did not get detected by local Defender.
 - If you have not got an AWS account handy or a spare domain to use, it could take anywhere from 20 ~ 30 minutes to set this all up.
 - If you already have an AWS account ready and a domain, the time to setup the infrastructure with this repo is 10 minutes.
-- Average cost per 30 days if not shutdown: $33
+- Average cost per 30 days if not shutdown: $30~$35
 - Average cost per day: $1~$2
