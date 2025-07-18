@@ -107,8 +107,7 @@ while true; do
     sleep 30
 done
 
-echo "Looks like we might have some DNS updates. It's possible I am wrong!"
-echo "If I fail, run: sudo certbot --apache --email admin@$MYFQDN --agree-tos --no-eff-email -d $MYFQDN --redirect --hsts --uir"
+echo "If I fail, re-run: sudo certbot --apache --email admin@$MYFQDN --agree-tos --no-eff-email -d $MYFQDN --redirect --hsts --uir"
 
 while ! ss -tuln | grep ':80 '; do
     echo "Waiting for Apache to bind to port 80..."
