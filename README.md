@@ -27,7 +27,7 @@ Before deploying this infrastructure ensure you have:
 
 - ✅ **Domain Ownership**: A domain you own (I recommend using Cloudflare as the registrar)
 - ✅ **AWS Account**: A valid AWS account with root access
-- ✅ **AWS Credentials**: An IAM user with `AdministratorAccess` policy and generated access keys
+- ✅ **AWS Credentials**: Generated IAM access keys
 - ✅ **Linux Environment**: Linux distro for deployment (I prefer Kali)
 - ✅ **Terraform+AWS**: Terraform and awscli installed
 
